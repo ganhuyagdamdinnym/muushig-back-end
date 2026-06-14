@@ -173,6 +173,9 @@ def finish_round(room_id: str, tricks_won: dict) -> dict:
     room = real_rooms.find_one({"roomId": room_id})
     if not room:
         return {"error": "Room not found"}
+    # Аль хэдийн finished бол дахин боловсруулахгүй
+    if room.get("status") == "finished":
+        return {"status": "finished", "playersPoints": room["rounds"][-1]["playersPoints"]}
 
     last_round = room["rounds"][-1]
     old_points = last_round["playersPoints"]

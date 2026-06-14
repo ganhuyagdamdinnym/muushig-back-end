@@ -60,7 +60,6 @@ def end_round(roomId: str, tricks_won: dict):
 
 @router.websocket("/{roomId}/ws/{userId}")
 async def websocket_endpoint(ws: WebSocket, roomId: str, userId: str):
-    await ws.accept()
     await manager.connect(roomId, userId, ws)
 
     # Бусад тоглогчдод мэдэгдэх
@@ -127,7 +126,10 @@ async def _handle_message(room_id: str, user_id: str, msg: dict):
         }, exclude=user_id)
 
     elif msg_type == "end_round":
-        # { type: "end_round", tricksWon: { "0": 2, "1": 1, ... } }
+        # Зөвхөн slotIndex == 0 (эхний slot) дуудна — давхардлаас сэргийлэх
+        slot_index = msg.get("slotIndex", -1)
+        if slot_index != 0:
+            return
         result = finish_round(room_id, msg.get("tricksWon", {}))
         await manager.broadcast(room_id, {
             "type": "round_ended",
