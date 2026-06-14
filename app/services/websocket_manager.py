@@ -7,7 +7,7 @@ class ConnectionManager:
         self.rooms: Dict[str, Dict[str, WebSocket]] = {}
 
     async def connect(self, room_id: str, user_id: str, ws: WebSocket):
-        # await ws.accept()
+        # accept нь router дотор хийгддэг
         if room_id not in self.rooms:
             self.rooms[room_id] = {}
         self.rooms[room_id][user_id] = ws

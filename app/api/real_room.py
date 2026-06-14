@@ -60,7 +60,9 @@ def end_round(roomId: str, tricks_won: dict):
 
 @router.websocket("/{roomId}/ws/{userId}")
 async def websocket_endpoint(ws: WebSocket, roomId: str, userId: str):
+    await ws.accept()  # ← ЭНИ НЭМЭХ
     await manager.connect(roomId, userId, ws)
+    
 
     # Бусад тоглогчдод мэдэгдэх
     await manager.broadcast(roomId, {
@@ -79,12 +81,19 @@ async def websocket_endpoint(ws: WebSocket, roomId: str, userId: str):
         while True:
             msg = await ws.receive_json()
             await _handle_message(roomId, userId, msg)
-    except WebSocketDisconnect:
+    except WebSocketDisconnect as e:
+        print(f"[WS] Disconnect: room={roomId} user={userId} code={e.code}")
         manager.disconnect(roomId, userId)
         await manager.broadcast(roomId, {
             "type": "player_left",
             "userId": userId,
         })
+    except RuntimeError as e:
+        print(f"[WS] RuntimeError: room={roomId} user={userId} err={e}")
+        manager.disconnect(roomId, userId)
+    except Exception as e:
+        print(f"[WS] Unknown error: room={roomId} user={userId} err={e}")
+        manager.disconnect(roomId, userId)
 
 
 async def _handle_message(room_id: str, user_id: str, msg: dict):
